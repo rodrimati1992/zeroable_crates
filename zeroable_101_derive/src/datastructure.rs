@@ -92,6 +92,10 @@ impl<'a> DataStructure<'a> {
             variants,
         }
     }
+
+    pub fn is_enum(&self) -> bool {
+        self.data_variant == DataVariant::Enum
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////

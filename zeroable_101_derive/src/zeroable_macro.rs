@@ -1,13 +1,17 @@
+use crate::datastructure::{DataStructure, DataVariant, MyField};
+
 use proc_macro2::TokenStream as TokenStream2;
 
 use quote::quote;
 
 use syn::{punctuated::Punctuated, DeriveInput};
 
-use crate::datastructure::{DataStructure, DataVariant, MyField};
+mod attribute_parsing;
 
 pub fn derive(ref data: DeriveInput) -> Result<TokenStream2, syn::Error> {
     let ref ds = DataStructure::new(data);
+
+    let attrs = attribute_parsing::parse_attrs_for_zeroed(ds)?;
 
     let field_asserts = match ds.data_variant {
         DataVariant::Struct => emit_field_assertions(&ds.variants[0].fields),

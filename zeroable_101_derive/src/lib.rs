@@ -5,7 +5,11 @@
 
 extern crate proc_macro;
 
+#[macro_use]
+mod macros;
+
 mod datastructure;
+mod utils;
 mod zeroable_macro;
 
 use proc_macro::TokenStream as TokenStream1;

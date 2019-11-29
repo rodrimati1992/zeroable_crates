@@ -1,0 +1,13 @@
+[package]
+name = "zeroable_101"
+version = "0.1.0"
+authors = ["rodrimati1992 <rodrimatt1985@gmail.com>"]
+edition = "2018"
+
+[features]
+# For improved debugging,
+# prints the type name of `T` in `AssertZeroable<T>`'s ' Debug implementation.
+print_type=[]
+
+[dependencies]
+bytemuck="1.0"

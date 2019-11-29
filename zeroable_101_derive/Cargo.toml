@@ -1,0 +1,7 @@
+[package]
+name = "zeroable_101_derive"
+version = "0.1.0"
+authors = ["rodrimati1992 <rodrimatt1985@gmail.com>"]
+edition = "2018"
+
+[dependencies]

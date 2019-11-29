@@ -8,7 +8,9 @@ extern crate proc_macro;
 #[macro_use]
 mod macros;
 
+mod attribute_parsing_shared;
 mod datastructure;
+mod repr_attr;
 mod utils;
 mod zeroable_macro;
 

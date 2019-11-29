@@ -1,6 +1,10 @@
-use crate::datastructure::{DataStructure, MyField, Struct};
+use crate::{
+    attribute_parsing_shared::with_nested_meta,
+    datastructure::{DataStructure, MyField, Struct},
+    repr_attr::ReprAttr,
+};
 
-use syn::{Attribute, Lit, Meta, MetaList, MetaNameValue, NestedMeta, WherePredicate};
+use syn::{Attribute, Lit, Meta, MetaList, MetaNameValue, WherePredicate};
 
 use std::marker::PhantomData;
 
@@ -14,6 +18,11 @@ pub(crate) struct ZeroConfig<'a> {
 
     /// If true,panics with the output of the derive macro.
     pub(crate) debug_print: bool,
+
+    pub(crate) zeroable_field: Option<usize>,
+
+    pub(crate) repr_attr: ReprAttr,
+
     _marker: PhantomData<&'a ()>,
 }
 
@@ -23,6 +32,8 @@ impl<'a> ZeroConfig<'a> {
             extra_predicates,
             unbounded_typarams,
             debug_print,
+            zeroable_field,
+            repr_attr,
             _marker,
         } = za;
 
@@ -30,6 +41,8 @@ impl<'a> ZeroConfig<'a> {
             extra_predicates,
             unbounded_typarams,
             debug_print,
+            zeroable_field,
+            repr_attr,
             _marker,
         })
     }
@@ -49,10 +62,13 @@ struct ZeroableAttrs<'a> {
     extra_predicates: Vec<WherePredicate>,
     unbounded_typarams: Vec<IsBounded>,
     debug_print: bool,
+    zeroable_field: Option<usize>,
+    repr_attr: ReprAttr,
     _marker: PhantomData<&'a ()>,
 }
 
 #[derive(Copy, Clone)]
+#[allow(dead_code)]
 enum ParseContext<'a> {
     TypeAttr { ds: &'a DataStructure<'a> },
     Variant { variant: &'a Struct<'a> },
@@ -68,16 +84,17 @@ pub(crate) fn parse_attrs_for_zeroed<'a>(
         extra_predicates: Vec::new(),
         unbounded_typarams: vec![IsBounded::Yes; typaram_count],
         debug_print: false,
+        zeroable_field: None,
+        repr_attr: ReprAttr::Rust,
         _marker: PhantomData,
     };
 
-    if ds.is_enum() {
-        parse_inner(&mut this, ds.attrs, ParseContext::TypeAttr { ds })?;
-    }
+    parse_inner(&mut this, ds.attrs, ParseContext::TypeAttr { ds })?;
+
     for variant in &ds.variants {
         parse_inner(&mut this, variant.attrs, ParseContext::Variant { variant })?;
         for field in &variant.fields {
-            parse_inner(&mut this, variant.attrs, ParseContext::Field { field })?;
+            parse_inner(&mut this, field.attrs, ParseContext::Field { field })?;
         }
     }
 
@@ -112,6 +129,8 @@ fn parse_attr_list<'a>(
         with_nested_meta("zero", list.nested, |attr| {
             parse_sabi_attr(this, pctx, attr)
         })?;
+    } else if list.path.is_ident("repr") {
+        this.repr_attr = ReprAttr::new(list.nested)?;
     }
     Ok(())
 }
@@ -169,6 +188,13 @@ fn parse_sabi_attr<'a>(
                 return_spanned_err! {path,"Unrecognized attribute"}
             }
         }
+        (ParseContext::Field { field }, Meta::Path(path)) => {
+            if path.is_ident("zeroable") {
+                this.zeroable_field = Some(field.index.pos);
+            } else {
+                return_spanned_err! {path,"Unrecognized attribute"}
+            }
+        }
         (_, attr) => {
             return_spanned_err! {attr,"Unrecognized attribute"}
         }
@@ -177,27 +203,3 @@ fn parse_sabi_attr<'a>(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-/// Iterates over an iterator of syn::NestedMeta,
-/// unwrapping it into a syn::Meta and passing it into the `f` closure.
-pub fn with_nested_meta<I, F>(attr_name: &str, iter: I, mut f: F) -> Result<(), syn::Error>
-where
-    F: FnMut(Meta) -> Result<(), syn::Error>,
-    I: IntoIterator<Item = NestedMeta>,
-{
-    for repr in iter {
-        match repr {
-            NestedMeta::Meta(attr) => {
-                f(attr)?;
-            }
-            NestedMeta::Lit(lit) => {
-                return_spanned_err!(
-                    lit,
-                    "the #[{}(...)] attribute does not allow literals in the attribute list",
-                    attr_name,
-                );
-            }
-        }
-    }
-    Ok(())
-}

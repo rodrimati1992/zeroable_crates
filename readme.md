@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/rodrimati1992/zeroable_crates.svg?branch=master)](https://travis-ci.org/rodrimati1992/zeroable_crates)
 [![](https://img.shields.io/crates/v/zeroable.svg)][crates-io]
 [![](https://docs.rs/zeroable/badge.svg)][api-docs]
 
@@ -11,7 +12,7 @@ Provides a derive macro for
 
 # Derive Documentation
 
-[Here is the documentation for `Zeroable`](https://docs.rs/zeroable/*/zeroable_docs/index.html)
+[Here is the documentation for `Zeroable`](https://docs.rs/zeroable/0.1/zeroable/zeroable_docs/index.html)
 
 # Examples
 
@@ -19,7 +20,7 @@ Provides a derive macro for
 
 
 [Here are more struct examples
-](https://docs.rs/zeroable/*/zeroable_docs/index.html#struct)
+](https://docs.rs/zeroable/0.1/zeroable/zeroable_docs/index.html#struct)
 
 ```rust
 
@@ -39,9 +40,11 @@ assert_eq!( Point3D::zeroed() , Point3D{ x:0, y:0, z:0 } );
 ### Enums
 
 There are some restrictions for enums,documented in
-[the Zeroable macro docs](https://docs.rs/zeroable/*/zeroable_docs/index.html#enums).
+[the Zeroable macro docs
+](https://docs.rs/zeroable/0.1/zeroable/zeroable_docs/index.html#enums).
 
-[Here are more enum examples](https://docs.rs/zeroable/*/zeroable_docs/index.html#enum)
+[Here are more enum examples
+](https://docs.rs/zeroable/0.1/zeroable/zeroable_docs/index.html#enum)
 
 
 ```rust
@@ -63,9 +66,11 @@ assert_eq!( Ternary::zeroed() , Ternary::Undefined );
 ### Unions
 
 There are some restrictions for unions,documented in
-[the Zeroable macro docs](https://docs.rs/zeroable/*/zeroable_docs/index.html#unions).
+[the Zeroable macro docs
+](https://docs.rs/zeroable/0.1/zeroable/zeroable_docs/index.html#unions).
 
-[Here are more union examples](https://docs.rs/zeroable/*/zeroable_docs/index.html#union)
+[Here are more union examples
+](https://docs.rs/zeroable/0.1/zeroable/zeroable_docs/index.html#union)
 
 
 ```rust

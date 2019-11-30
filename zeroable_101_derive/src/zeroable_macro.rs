@@ -14,6 +14,9 @@ use std::iter;
 
 mod attribute_parsing;
 
+#[cfg(test)]
+mod tests;
+
 use self::attribute_parsing::{IsBounded, ZeroConfig};
 
 pub fn derive(ref data: DeriveInput) -> Result<TokenStream2, syn::Error> {
@@ -54,12 +57,16 @@ pub fn derive(ref data: DeriveInput) -> Result<TokenStream2, syn::Error> {
             #( #extra_predicates ,)*
     );
 
+    let test_code = &*config.test_code;
+
     let tokens = quote!(
         impl #impl_generics #name #ty_generics
         #where_clause_tokens
         {
-            const _ASSERT_IS_ZEROABLE_101:()=
-                #field_asserts;
+            const _ASSERT_IS_ZEROABLE_101:()={
+                #({ #test_code })*
+                #field_asserts
+            };
         }
 
         unsafe impl #impl_generics ::zeroable_101::Zeroable for #name #ty_generics
@@ -131,9 +138,8 @@ Expected either:
     let union_ = &ds.variants[0];
 
     if union_.fields.len() == 0 {
-        Ok(quote!())
+        return_spanned_err! { ds.name,"Zero field union cannot implement Zeroable." }
     } else {
-        dbg!(config.repr_attr);
         let zeroable_field = if config.repr_attr == ReprAttr::Transparent {
             0
         } else {

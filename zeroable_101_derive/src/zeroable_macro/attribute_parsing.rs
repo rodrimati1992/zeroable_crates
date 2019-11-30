@@ -4,6 +4,8 @@ use crate::{
     repr_attr::ReprAttr,
 };
 
+use proc_macro2::TokenStream as TokenStream2;
+
 use syn::{Attribute, Lit, Meta, MetaList, MetaNameValue, WherePredicate};
 
 use std::marker::PhantomData;
@@ -15,6 +17,10 @@ pub(crate) struct ZeroConfig<'a> {
 
     /// The type parameters that don't have a `Zeroable` bound.
     pub(crate) unbounded_typarams: Vec<IsBounded>,
+
+    /// Code that's inserted alongside the Zeroable assertions.
+    /// Used in tests.
+    pub(crate) test_code: Vec<TokenStream2>,
 
     /// If true,panics with the output of the derive macro.
     pub(crate) debug_print: bool,
@@ -31,6 +37,7 @@ impl<'a> ZeroConfig<'a> {
         let ZeroableAttrs {
             extra_predicates,
             unbounded_typarams,
+            test_code,
             debug_print,
             zeroable_field,
             repr_attr,
@@ -40,6 +47,7 @@ impl<'a> ZeroConfig<'a> {
         Ok(Self {
             extra_predicates,
             unbounded_typarams,
+            test_code,
             debug_print,
             zeroable_field,
             repr_attr,
@@ -61,6 +69,7 @@ pub(crate) enum IsBounded {
 struct ZeroableAttrs<'a> {
     extra_predicates: Vec<WherePredicate>,
     unbounded_typarams: Vec<IsBounded>,
+    test_code: Vec<TokenStream2>,
     debug_print: bool,
     zeroable_field: Option<usize>,
     repr_attr: ReprAttr,
@@ -83,6 +92,7 @@ pub(crate) fn parse_attrs_for_zeroed<'a>(
     let mut this = ZeroableAttrs {
         extra_predicates: Vec::new(),
         unbounded_typarams: vec![IsBounded::Yes; typaram_count],
+        test_code: Vec::new(),
         debug_print: false,
         zeroable_field: None,
         repr_attr: ReprAttr::Rust,
@@ -151,6 +161,8 @@ fn parse_sabi_attr<'a>(
         ) => {
             if path.is_ident("bound") {
                 this.extra_predicates.push(value.parse()?);
+            } else if path.is_ident("_test_code") {
+                this.test_code.push(value.parse()?);
             } else {
                 return_spanned_err! {path,"Unrecognized attribute"}
             }

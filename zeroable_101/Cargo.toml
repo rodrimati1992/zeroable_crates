@@ -9,5 +9,11 @@ edition = "2018"
 # prints the type name of `T` in `AssertZeroable<T>`'s ' Debug implementation.
 print_type=[]
 
+# Internal feature to enable tests that require Rust nightly.
+nightly_testing=["testing"]
+testing=[]
+
 [dependencies]
 bytemuck="1.0"
+zeroable_101_derive={version="0.1.0",path="../zeroable_101_derive"}
+

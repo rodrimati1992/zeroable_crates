@@ -42,3 +42,4 @@ compile_error! { "tests must be run with the \"testing\" feature" }
 
 #[cfg(feature = "testing")]
 mod tests;
+

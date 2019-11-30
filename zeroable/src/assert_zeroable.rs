@@ -86,7 +86,7 @@ impl<T: ?Sized> Debug for AssertZeroable<T> {
         let mut ds = f.debug_struct("AssertZeroable");
 
         #[cfg(feature = "print_type")]
-        let ds = ds.field("type", &std::any::type_name::<T>());
+        let ds = ds.field("type", &core::any::type_name::<T>());
 
         ds.finish()
     }

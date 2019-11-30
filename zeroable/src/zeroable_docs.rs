@@ -1,5 +1,5 @@
 /*!
-Documentation for the `Zeroable` macro.
+Documentation for the `Zeroable` derive macro.
 
 The `Zeroable` derive macro allows deriving the `bytemuck::Zeroable` trait.
 
@@ -9,7 +9,7 @@ All of these restrictions are enforced at compile-time.
 
 ### Structs
 
-None,it works how you'd expect,just do:
+All fields are required to implement Zeroable.
 
 ```rust
 use zeroable::Zeroable;
@@ -23,29 +23,26 @@ struct AStruct{
 
 ### Enums
 
-Enums must have a `#[repr()]` attribute,
-with at least one of `C`/`<some_integer_type>`/`transparent`.
+Enums must satisfy one of these:
 
-If the enum has a `C` and/or `<some_integer_type>`  representation attribute,
-you must either:
+- Having a `#[repr(C/u8/i8/u16/i16/u32/i32/u64/i64/u128/i128/usize/isize)]` attribute,
+    with either an implicit discriminant for the first variant (which is always `0`),
+    or an explicit `0` discriminant for some variant.
+    <br>
+    The fields of the variant with a `0` discriminant will then be required to 
+    implement Zeroable,while the fields of other variants won't be.
 
-- Leave the discriminant of the first variant implicit (it'll be `0`).
-
-- Specify the discriminant of a variant as a literal `0`.
-
-In either case,the fields of the variant with a `0` discriminant
-will be required to be zeroable,while the fields of the other variants won't be.
-
-If the enum has a `trasparent` representation,it must only have a single variant,
-with a single field.
+- Having a `#[repr(transparent)]` attribute,with a single variant and field,
+    which must implement Zeroable.
 
 ### Unions
 
-Unions must have either of these:
+Unions must satisfy one of these:
 
-- A `transparent` representation attribute,and a single field.
+- Having a `#[repr(transparent)]` attribute,with a single field,
+    which implements Zeroable.
 
-- A field with a `#[zero(zeroable)]` attribute.
+- Having a field with a `#[zero(zeroable)]` attribute,which is of a Zeroable type.
 
 # Attributes
 
@@ -104,8 +101,9 @@ A simple Option-like enum.
 
 In this the None variant is the one instantiated by `zeroed`.
 
-`#[zero(not_zeroable(T))]``doesn't cause an error because `T` is not in
-the variant instantiated with `zeroed`.
+`#[zero(not_zeroable(T))]` doesn't cause an error because `T` is not in
+the variant instantiated by `zeroed` 
+(if `None` contained a `T`,then it would be an error).
 
 ```rust
 use zeroable::Zeroable;
@@ -142,9 +140,89 @@ assert_eq!( Ordering::zeroed(), Ordering::Equal );
 
 ```
 
+### Enum (non-compiling)
+
+This doesn't compile because there is no variant with a `0` discriminant.
+
+```compile_fail
+use zeroable::Zeroable;
+
+#[derive(Debug,PartialEq,Zeroable)]
+#[repr(u8)]
+enum Directions{
+    Left=1,
+    Right,
+    Up,
+    Down,
+}
+
+```
+
+### Enum (non-compiling)
+
+This doesn't compile because the first variant contains a `NonZeroU8`,
+which is not zeroable.
+
+```compile_fail
+use zeroable::Zeroable;
+
+use core::num::NonZeroU8;
+
+#[derive(Debug,PartialEq,Zeroable)]
+#[repr(u8)]
+enum NonZeroOrZeroable{
+    NonZero(NonZeroU8),
+    Zeroable(u8),
+}
+
+```
+
+It compiles if you swap the variants:
+```rust
+use zeroable::Zeroable;
+
+use core::num::NonZeroU8;
+
+#[derive(Debug,PartialEq,Zeroable)]
+#[repr(u8)]
+enum NonZeroOrZeroable{
+    Zeroable(u8),
+    NonZero(NonZeroU8),
+}
+
+assert_eq!( NonZeroOrZeroable::zeroed(), NonZeroOrZeroable::Zeroable(0) );
+
+```
+this is because the first variant of an enum implicitly has a `0` discriminant,
+and `u8` is zeroable.
+
+### Enum (requires nightly)
+
+This is an example of a `#[repr(transparent)]` enum.
+
+*/
+#![cfg_attr(feature="nightly_docs",doc="```rust")]
+#![cfg_attr(not(feature="nightly_docs"),doc="```ignore")]
+/*!
+#![feature(transparent_enums)]
+
+use zeroable::Zeroable;
+
+#[derive(Debug,PartialEq,Zeroable)]
+#[repr(transparent)]
+enum Wrapper<T>{
+    Value(T),
+}
+
+assert_eq!( Wrapper::<isize>::zeroed(), Wrapper::Value(0_isize) );
+assert_eq!( Wrapper::<usize>::zeroed(), Wrapper::Value(0_usize) );
+assert_eq!( Wrapper::<(usize,usize)>::zeroed(), Wrapper::Value((0_usize,0_usize)) );
+```
+
+
 ### Struct
 
-A Rectangle type,
+A Rectangle type.
 
 ```rust
 use zeroable::Zeroable;
@@ -168,7 +246,7 @@ Here we define a binary tree of zeroable with indices instead of pointers:
 ```
 use zeroable::Zeroable;
 
-use std::num::NonZeroU32;
+use core::num::NonZeroU32;
 
 #[derive(Debug,PartialEq)]
 struct Tree<T>{
@@ -190,6 +268,20 @@ assert_eq!(
         right:None,
     },
 );
+
+```
+
+### Struct (non-compiling)
+
+This doesn't compile because `&[T]` is not zeroable.
+
+```compile_fail
+use zeroable::Zeroable;
+
+#[derive(Debug,PartialEq,Zeroable)]
+struct NonEmptySlice<'a,T>{
+    slice:&'a [T],
+}
 
 ```
 
@@ -230,11 +322,56 @@ union CondValue<T:Copy>{
 
 unsafe{
     let zeroed=CondValue::<&'static str>::zeroed();
-
     assert_eq!( zeroed.cond, false );
-
     // You can't read from `zeroed.value` because a reference can't be zeroed.
 }
+unsafe{
+    let zeroed=CondValue::<char>::zeroed();
+    assert_eq!( zeroed.cond, false );
+    assert_eq!( zeroed.value, '\0' );
+}
+```
+
+### Union (requires nightly)
+
+This is an example of a `#[repr(transparent)]` union.
+
+*/
+#![cfg_attr(feature="nightly_docs",doc="```rust")]
+#![cfg_attr(not(feature="nightly_docs"),doc="```ignore")]
+/*!
+#![feature(transparent_unions)]
+
+use zeroable::Zeroable;
+
+#[derive(Zeroable)]
+#[repr(transparent)]
+union Wrapper<T:Copy>{
+    value:T,
+}
+
+unsafe{
+    assert_eq!( Wrapper::<isize>::zeroed().value, 0_isize );
+    assert_eq!( Wrapper::<usize>::zeroed().value, 0_usize );
+    assert_eq!( Wrapper::<(usize,usize)>::zeroed().value, (0_usize,0_usize) );
+}
+```
+
+### Union (non-compiling)
+
+This doesn't compile because no field has a `#[zero(zeroable)]` attribute.
+
+```compile_fail
+use zeroable::Zeroable;
+
+use core::mem::ManuallyDrop;
+
+#[derive(Zeroable)]
+union MaybeUninitialized<T:Copy>{
+    uninit:(),
+    init:ManuallyDrop<T>,
+}
+
 ```
 
 

@@ -25,8 +25,13 @@ travis-ci = { repository =  "rodrimati1992/zeroable_crates/" }
 print_type=[]
 
 # Internal feature to enable tests that require Rust nightly.
-nightly_testing=["testing"]
+nightly_testing=["nightly_docs","testing"]
+# Internal feature for tests
 testing=[]
+
+# This enables doctests that require nightly,
+# otherwise they are ignored by the test runner (they appear as ignored in the docs).
+nightly_docs=[]
 
 [dependencies]
 bytemuck="1.0"

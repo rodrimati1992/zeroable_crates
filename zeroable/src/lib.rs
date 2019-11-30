@@ -1,9 +1,13 @@
 /*!
-A bytemuck adjacent library,with a derive macro for `Zeroable`.
+A [bytemuck](https://docs.rs/bytemuck/1) adjacent library,with a derive macro for `Zeroable`.
 
 # Derive Documentation
 
 [Here is the documentation for `Zeroable`](./zeroable_docs/index.html)
+
+# `#[no_std]` support
+
+This crate is `#[no_std]`,and only requires the `core` library.
 
 
 
@@ -18,26 +22,23 @@ mod assert_zeroable;
 
 pub mod zeroable_docs;
 
-extern crate self as zeroable_101;
+extern crate self as zeroable;
 
 #[doc(noinline)]
 pub use bytemuck;
 
-/// A reexport of the `bytemuck::Zeroable` trait.
+/// A reexport of the
+/// [`bytemuck::Zeroable`](https://docs.rs/bytemuck/1/bytemuck/trait.Zeroable.html)
+/// trait.
 ///
 pub use bytemuck::Zeroable;
 
-pub use zeroable_101_derive::Zeroable;
+pub use zeroable_derive::Zeroable;
 
 pub use crate::assert_zeroable::AssertZeroable;
-
 
 #[cfg(all(test, not(feature = "testing")))]
 compile_error! { "tests must be run with the \"testing\" feature" }
 
 #[cfg(feature = "testing")]
 mod tests;
-
-
-
-

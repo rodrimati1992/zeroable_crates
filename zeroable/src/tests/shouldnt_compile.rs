@@ -7,7 +7,7 @@
 /// ```compile_fail
 /// #![cfg_attr(feature = "nightly_testing", feature(transparent_unions))]
 ///
-/// use zeroable_101::Zeroable;
+/// use zeroable::Zeroable;
 ///
 /// use core::num::NonZeroU8;
 ///
@@ -21,7 +21,7 @@
 /// ```rust
 /// #![cfg_attr(feature = "nightly_testing", feature(transparent_unions))]
 ///
-/// use zeroable_101::Zeroable;
+/// use zeroable::Zeroable;
 ///
 /// #[derive(Zeroable)]
 /// #[repr(transparent)]
@@ -34,7 +34,7 @@ pub struct UnionTransparentNonCompiling;
 
 ///
 /// ```compile_fail
-/// use zeroable_101::Zeroable;
+/// use zeroable::Zeroable;
 ///
 /// #[derive(Zeroable)]
 /// union UnionTransparent {
@@ -45,7 +45,7 @@ pub struct UnionTransparentNonCompiling;
 /// ```
 ///
 /// ```rust
-/// use zeroable_101::Zeroable;
+/// use zeroable::Zeroable;
 ///
 /// #[derive(Zeroable)]
 /// union UnionTransparent {
@@ -62,7 +62,7 @@ pub struct UnionNonCompiling;
 /// ```compile_fail
 /// #![cfg_attr(feature = "nightly_testing", feature(transparent_enums))]
 ///
-/// use zeroable_101::Zeroable;
+/// use zeroable::Zeroable;
 ///
 /// use core::num::NonZeroU8;
 ///
@@ -76,7 +76,7 @@ pub struct UnionNonCompiling;
 /// ```rust
 /// #![cfg_attr(feature = "nightly_testing", feature(transparent_enums))]
 ///
-/// use zeroable_101::Zeroable;
+/// use zeroable::Zeroable;
 ///
 /// #[derive(Zeroable)]
 /// #[repr(transparent)]
@@ -89,7 +89,7 @@ pub struct EnumTransparentNonCompiling;
 
 ///
 /// ```compile_fail
-/// use zeroable_101::Zeroable;
+/// use zeroable::Zeroable;
 ///
 /// use core::num::NonZeroU8;
 ///
@@ -102,7 +102,7 @@ pub struct EnumTransparentNonCompiling;
 /// ```
 ///
 /// ```rust
-/// use zeroable_101::Zeroable;
+/// use zeroable::Zeroable;
 ///
 /// use core::num::NonZeroU8;
 ///
@@ -119,7 +119,7 @@ pub struct EnumNonCompiling;
 
 ///
 /// ```compile_fail
-/// use zeroable_101::Zeroable;
+/// use zeroable::Zeroable;
 ///
 /// use core::num::NonZeroU16;
 ///
@@ -131,7 +131,7 @@ pub struct EnumNonCompiling;
 /// ```
 ///
 /// ```rust
-/// use zeroable_101::Zeroable;
+/// use zeroable::Zeroable;
 ///
 /// #[derive(Zeroable)]
 /// #[repr(transparent)]

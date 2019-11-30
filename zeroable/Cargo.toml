@@ -1,5 +1,6 @@
 [package]
-name = "zeroable_101"
+name = "zeroable"
+description = "Provides a derive for `bytemuck::Zeroable`"
 version = "0.1.0"
 authors = ["rodrimati1992 <rodrimatt1985@gmail.com>"]
 edition = "2018"
@@ -15,5 +16,5 @@ testing=[]
 
 [dependencies]
 bytemuck="1.0"
-zeroable_101_derive={version="0.1.0",path="../zeroable_101_derive"}
+zeroable_derive={version="0.1.0",path="../zeroable_derive"}
 

@@ -12,7 +12,7 @@ All of these restrictions are enforced at compile-time.
 None,it works how you'd expect,just do:
 
 ```rust
-use zeroable_101::Zeroable;
+use zeroable::Zeroable;
 
 #[derive(Zeroable)]
 struct AStruct{
@@ -80,7 +80,7 @@ Determines which field of a union is expected to be initialized with zeroes.
 A Result-like enum,with `Ok` as the variant instantiated by `zeroed`.
 
 ```rust
-use zeroable_101::Zeroable;
+use zeroable::Zeroable;
 
 #[derive(Debug,PartialEq,Zeroable)]
 #[repr(u8)]
@@ -108,7 +108,7 @@ In this the None variant is the one instantiated by `zeroed`.
 the variant instantiated with `zeroed`.
 
 ```rust
-use zeroable_101::Zeroable;
+use zeroable::Zeroable;
 
 #[derive(Debug,PartialEq,Zeroable)]
 #[repr(u8)]
@@ -128,7 +128,7 @@ assert_eq!( MyOption::<String>::zeroed(), MyOption::None );
 Here is an Ordering-like enum.
 
 ```rust
-use zeroable_101::Zeroable;
+use zeroable::Zeroable;
 
 #[derive(Debug,PartialEq,Zeroable)]
 #[repr(i8)]
@@ -147,7 +147,7 @@ assert_eq!( Ordering::zeroed(), Ordering::Equal );
 A Rectangle type,
 
 ```rust
-use zeroable_101::Zeroable;
+use zeroable::Zeroable;
 
 #[derive(Debug,PartialEq,Zeroable)]
 struct Rectangle<T>{
@@ -166,7 +166,7 @@ assert_eq!( Rectangle::zeroed(), Rectangle{ x:0, y:0, w:0, h:0 } );
 Here we define a binary tree of zeroable with indices instead of pointers:
 
 ```
-use zeroable_101::Zeroable;
+use zeroable::Zeroable;
 
 use std::num::NonZeroU32;
 
@@ -196,7 +196,7 @@ assert_eq!(
 ### Union
 
 ```rust
-use zeroable_101::Zeroable;
+use zeroable::Zeroable;
 
 #[derive(Zeroable)]
 #[repr(C)] // This isn't necessary for Zeroable
@@ -218,7 +218,7 @@ unsafe{
 ### Union
 
 ```rust
-use zeroable_101::Zeroable;
+use zeroable::Zeroable;
 
 #[derive(Zeroable)]
 #[zero(not_zeroable(T))]

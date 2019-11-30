@@ -1,5 +1,5 @@
 [workspace]
 members=[
-    "zeroable_101",
-    "zeroable_101_derive",
+    "zeroable",
+    "zeroable_derive",
 ]

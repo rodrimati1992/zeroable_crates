@@ -53,7 +53,7 @@ pub fn derive(ref data: DeriveInput) -> Result<TokenStream2, syn::Error> {
     let where_clause_tokens = quote!(
         where
             #( #where_preds ,)*
-            #( #ty_params: ::zeroable_101::Zeroable, )*
+            #( #ty_params: ::zeroable::Zeroable, )*
             #( #extra_predicates ,)*
     );
 
@@ -69,7 +69,7 @@ pub fn derive(ref data: DeriveInput) -> Result<TokenStream2, syn::Error> {
             };
         }
 
-        unsafe impl #impl_generics ::zeroable_101::Zeroable for #name #ty_generics
+        unsafe impl #impl_generics ::zeroable::Zeroable for #name #ty_generics
         #where_clause_tokens
         {}
     );
@@ -161,7 +161,7 @@ where
     let tys = fields.into_iter().map(|x| x.ty);
     quote!({
         #(
-            let _=::zeroable_101::AssertZeroable::<#tys>::NEW;
+            let _=::zeroable::AssertZeroable::<#tys>::NEW;
         )*
     })
 }

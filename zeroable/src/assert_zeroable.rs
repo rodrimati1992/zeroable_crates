@@ -16,8 +16,7 @@ use core::{
 #[repr(C)]
 pub struct AssertZeroable<T: ?Sized>(PhantomData<T>);
 
-const _ZERO_SIZED:[();1-core::mem::size_of::<AssertZeroable<()>>()]=[()];
-
+const _ZERO_SIZED: [(); 1 - core::mem::size_of::<AssertZeroable<()>>()] = [()];
 
 impl<T> AssertZeroable<T>
 where

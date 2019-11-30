@@ -1,4 +1,5 @@
-//! An implementation detail of `zeroable_101`.
+//! An implementation detail of `zeroable`.
+
 #![deny(unreachable_patterns)]
 #![deny(unused_doc_comments)]
 #![deny(unconditional_recursion)]
@@ -17,7 +18,8 @@ mod zeroable_macro;
 use proc_macro::TokenStream as TokenStream1;
 use proc_macro2::TokenStream as TokenStream2;
 
-/// This macro is documented in `zeroable_101::zeroable_docs`.
+/// This macro is documented in [`zeroable::zeroable_docs`](./zeroable_docs/index.html).
+/// (the link only works in the `zeroable` crate)
 #[proc_macro_derive(Zeroable, attributes(zero))]
 pub fn derive_zeroable(input: TokenStream1) -> TokenStream1 {
     parse_or_compile_err(input, zeroable_macro::derive).into()

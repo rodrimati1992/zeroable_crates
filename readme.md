@@ -92,6 +92,15 @@ unsafe{
 
 ```
 
+# Features
+
+- "print_type":
+    Slightly improved debugging,
+    shows the type of `T` in `AssertZeroable<T>`'s ' Debug implementation
+
+- "nightly_docs":
+    Makes the documentation examples that require Rust nightly run in doctests,
+    and shows them as tested in the documentation.
 
 # `#[no_std]` support
 

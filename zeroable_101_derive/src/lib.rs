@@ -17,6 +17,7 @@ mod zeroable_macro;
 use proc_macro::TokenStream as TokenStream1;
 use proc_macro2::TokenStream as TokenStream2;
 
+/// This macro is documented in `zeroable_101::zeroable_docs`.
 #[proc_macro_derive(Zeroable, attributes(zero))]
 pub fn derive_zeroable(input: TokenStream1) -> TokenStream1 {
     parse_or_compile_err(input, zeroable_macro::derive).into()

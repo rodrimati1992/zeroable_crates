@@ -10,8 +10,14 @@ use core::{
     mem,
 };
 
-/// A value level assertion that `T:Zeroable`.
+/// A marker type representing that `T` is `Zeroable`.
+///
+/// This type is zero-sized.
+#[repr(C)]
 pub struct AssertZeroable<T: ?Sized>(PhantomData<T>);
+
+const _ZERO_SIZED:[();1-core::mem::size_of::<AssertZeroable<()>>()]=[()];
+
 
 impl<T> AssertZeroable<T>
 where
@@ -25,7 +31,7 @@ impl<T> AssertZeroable<T> {
     /// Gets a zeroed `T`.
     ///
     /// This is safe to call,
-    /// since constructing a `AssertZeroable<T>``requires proving that `T` is `Zeroable`.
+    /// since constructing a `AssertZeroable<T>` requires that `T` is `Zeroable`.
     #[inline(always)]
     pub fn zeroed(self) -> T {
         unsafe { mem::zeroed() }

@@ -12,7 +12,7 @@ Provides a derive macro for
 
 # Derive Documentation
 
-[Here is the documentation for `Zeroable`](https://docs.rs/zeroable/0.1/zeroable/zeroable_docs/index.html)
+[Here is the documentation for `Zeroable`](https://docs.rs/zeroable/0.2/zeroable/zeroable_docs/index.html)
 
 # Examples
 
@@ -20,7 +20,7 @@ Provides a derive macro for
 
 
 [Here are more struct examples
-](https://docs.rs/zeroable/0.1/zeroable/zeroable_docs/index.html#struct)
+](https://docs.rs/zeroable/0.2/zeroable/zeroable_docs/index.html#struct)
 
 ```rust
 
@@ -41,10 +41,10 @@ assert_eq!( Point3D::zeroed() , Point3D{ x:0, y:0, z:0 } );
 
 There are some restrictions for enums,documented in
 [the Zeroable macro docs
-](https://docs.rs/zeroable/0.1/zeroable/zeroable_docs/index.html#enums).
+](https://docs.rs/zeroable/0.2/zeroable/zeroable_docs/index.html#enums).
 
 [Here are more enum examples
-](https://docs.rs/zeroable/0.1/zeroable/zeroable_docs/index.html#enum)
+](https://docs.rs/zeroable/0.2/zeroable/zeroable_docs/index.html#enum)
 
 
 ```rust
@@ -67,10 +67,10 @@ assert_eq!( Ternary::zeroed() , Ternary::Undefined );
 
 There are some restrictions for unions,documented in
 [the Zeroable macro docs
-](https://docs.rs/zeroable/0.1/zeroable/zeroable_docs/index.html#unions).
+](https://docs.rs/zeroable/0.2/zeroable/zeroable_docs/index.html#unions).
 
 [Here are more union examples
-](https://docs.rs/zeroable/0.1/zeroable/zeroable_docs/index.html#union)
+](https://docs.rs/zeroable/0.2/zeroable/zeroable_docs/index.html#union)
 
 
 ```rust
@@ -79,9 +79,7 @@ use zeroable::Zeroable;
 
 #[derive(Zeroable)]
 union Signedness{
-    #[zero(zeroable)]
     signed:i8,
-
     unsigned:u8,
 }
 

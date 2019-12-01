@@ -136,13 +136,11 @@ fn checks_and_emit_union_field_assertions(
 ) -> Result<TokenStream2, syn::Error> {
     assert_eq!(ds.data_variant, DataVariant::Union);
 
-    const UNION_ATTR_ERR: &str = "\
-Expected either:
+    const EXPECTED_NONZERO: &str =
+        "Expected one or more union fields without a `#[zero(nonzero)]` attribute.";
 
-- One or more zeroable fields.
-
-- A `#[repr(transparent)]` attribute.
-    ";
+    const EXPECTED_ZEROABLE: &str =
+        "Expected one or more union fields with a `#[zero(zeroable)]` attribute.";
 
     let union_ = &ds.variants[0];
 
@@ -164,8 +162,10 @@ Expected either:
                 .collect::<Vec<_>>()
         };
 
-        if zeroable_fields.is_empty() {
-            return_spanned_err!(ds.name, "{}", UNION_ATTR_ERR)
+        match (zeroable_fields.is_empty(), config.default_zeroab) {
+            (true, IsZeroable::Yes) => return_spanned_err!(ds.name, "{}", EXPECTED_NONZERO),
+            (true, IsZeroable::No) => return_spanned_err!(ds.name, "{}", EXPECTED_ZEROABLE),
+            (false, _) => {}
         }
 
         Ok(emit_field_assertions(zeroable_fields))
@@ -226,12 +226,13 @@ fn docs_for_union(ds: &'_ DataStructure<'_>, config: &'_ ZeroConfig<'_>) -> Stri
         buffer.push_str("Private fields are omitted in this documentation.\n\n");
     }
 
-    buffer.push_str("# Zeroable Fields\n\n");
-    buffer.push_str(
-        "These fields can be safely accessed in the return value of `Self::zeroed()`:\n\n",
-    );
-
-    output_fields(&mut buffer, zeroable_fields);
+    if !zeroable_fields.is_empty() {
+        buffer.push_str("# Zeroable Fields\n\n");
+        buffer.push_str(
+            "These fields can be safely accessed in the return value of `Self::zeroed()`:\n\n",
+        );
+        output_fields(&mut buffer, zeroable_fields);
+    }
 
     if !nonzero_fields.is_empty() {
         buffer.push_str("# NonZero Fields\n\n");

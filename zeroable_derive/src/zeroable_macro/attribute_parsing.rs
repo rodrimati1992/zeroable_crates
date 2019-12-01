@@ -28,6 +28,7 @@ pub(crate) struct ZeroConfig<'a> {
     pub(crate) debug_print: bool,
 
     pub(crate) zeroable_fields: Vec<IsZeroable>,
+    pub(crate) default_zeroab: IsZeroable,
 
     pub(crate) repr_attr: ReprAttr,
 
@@ -42,6 +43,7 @@ impl<'a> ZeroConfig<'a> {
             test_code,
             debug_print,
             zeroable_fields,
+            default_zeroab,
             repr_attr,
             _marker,
         } = za;
@@ -52,6 +54,7 @@ impl<'a> ZeroConfig<'a> {
             test_code,
             debug_print,
             zeroable_fields,
+            default_zeroab,
             repr_attr,
             _marker,
         })
@@ -89,6 +92,7 @@ struct ZeroableAttrs<'a> {
     test_code: Vec<TokenStream2>,
     debug_print: bool,
     zeroable_fields: Vec<IsZeroable>,
+    default_zeroab: IsZeroable,
     repr_attr: ReprAttr,
     _marker: PhantomData<&'a ()>,
 }
@@ -116,6 +120,7 @@ pub(crate) fn parse_attrs_for_zeroed<'a>(
         } else {
             Vec::new()
         },
+        default_zeroab: IsZeroable::Yes,
         repr_attr: ReprAttr::Rust,
         _marker: PhantomData,
     };
@@ -218,6 +223,15 @@ fn parse_sabi_attr<'a>(
             if path.is_ident("debug_print") {
                 this.debug_print = true;
             } else if path.is_ident("nonzero_fields") {
+                this.default_zeroab = IsZeroable::No;
+
+                if this.zeroable_fields.is_empty() {
+                    return_spanned_err! {
+                        path,
+                        "Cannot use the `#[zero(nonzero_fields)]` attribute on a struct/enum",
+                    }
+                }
+
                 for zf in &mut this.zeroable_fields {
                     *zf = IsZeroable::No;
                 }
@@ -236,7 +250,7 @@ fn parse_sabi_attr<'a>(
                     Some(zf) => *zf = IsZeroable::new(is_zeroable),
                     None => return_spanned_err! {
                         path,
-                        "Cannot use the `#[zero({})]` attribute on a struct/union field ",
+                        "Cannot use the `#[zero({})]` attribute on a struct/enum field ",
                         path.to_token_stream(),
                     },
                 }

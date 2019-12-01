@@ -47,7 +47,7 @@ to use the `#[zero(nonzero_fields)]` attribute on the union
 (which makes not requiring zeroable for fields the default for that union),
 then using the `#[zero(zeroable)]` attribute on zeroable fields.
 
-Zeroable impls for unions have documentation which mentions
+Zeroable impls for unions have documentation mentioning
 which fields were marked as zeroable,and which are not.
 
 # Attributes

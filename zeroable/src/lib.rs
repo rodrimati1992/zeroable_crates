@@ -1,5 +1,5 @@
 /*!
-A [bytemuck](https://docs.rs/bytemuck/1) adjacent library,with a derive macro for 
+A [bytemuck](https://docs.rs/bytemuck/1) adjacent library,with a derive macro for
 [`Zeroable`](https://docs.rs/bytemuck/1/bytemuck/trait.Zeroable.html).
 
 # Derive Documentation
@@ -15,7 +15,7 @@ This crate is `#[no_std]`,and only requires the `core` library.
 
 */
 
-#![cfg_attr(not(feature="nightly_docs"),no_std)]
+#![cfg_attr(not(feature = "nightly_docs"), no_std)]
 #![cfg_attr(feature = "nightly_testing", feature(arbitrary_enum_discriminant))]
 #![cfg_attr(feature = "nightly_testing", feature(transparent_unions))]
 #![cfg_attr(feature = "nightly_testing", feature(transparent_enums))]
@@ -44,5 +44,4 @@ compile_error! { "tests must be run with the \"testing\" feature" }
 
 #[cfg(feature = "testing")]
 mod tests;
-
 

@@ -18,8 +18,38 @@ struct TestCase {
 
 #[test]
 fn test_compilation() {
-    let testcases = vec![
-        TestCase {
+    fn struct_with_attr(struct_attr: &str, field_attr: &str) -> String {
+        format!(
+            "
+            {}
+            pub struct Struct {{
+                {}
+                pub left: (),
+                pub right: (),
+            }}
+        ",
+            struct_attr, field_attr,
+        )
+    }
+
+    fn enum_with_attr(struct_attr: &str, field_attr: &str) -> String {
+        format!(
+            "
+            {}
+            #[repr(u8)]
+            pub enum Enum<T> {{
+                None,
+                Some({} T)
+            }}
+        ",
+            struct_attr, field_attr,
+        )
+    }
+
+    let testcases = {
+        let mut testcases = Vec::new();
+
+        testcases.push(TestCase {
             code: "
                 enum Hello{
                     A
@@ -28,16 +58,16 @@ fn test_compilation() {
             .to_string(),
             has_errors: true,
             expected: r#"Expected .*#\[repr\("#.into(),
-        },
-        TestCase {
+        });
+        testcases.push(TestCase {
             code: "
                 enum Hello{}
             "
             .to_string(),
             has_errors: true,
             expected: r#"cannot implement Zeroable"#.into(),
-        },
-        TestCase {
+        });
+        testcases.push(TestCase {
             code: "
                 #[repr(C)]
                 enum Hello{
@@ -47,27 +77,41 @@ fn test_compilation() {
             .to_string(),
             has_errors: true,
             expected: r#"0.*discriminant"#.into(),
-        },
-        TestCase {
+        });
+        testcases.push(TestCase {
             code: "
-                #[zero(nonzero_fields)]
-                union Hello{
-                    a:u32,
+                pub union Union {
+                    #[zero(nonzero)]
+                    pub left: (),
+                    #[zero(nonzero)]
+                    pub right: (),
                 }
             "
             .to_string(),
             has_errors: true,
-            expected: r#"Expected.*zeroable field"#.into(),
-        },
-        TestCase {
+            expected: r#"Expected.*fields.*without.*\(nonzero\)"#.into(),
+        });
+        testcases.push(TestCase {
+            code: "
+                #[zero(nonzero_fields)]
+                pub union Union {
+                    pub left: (),
+                    pub right: (),
+                }
+            "
+            .to_string(),
+            has_errors: true,
+            expected: r#"Expected.*more.*fields.*with.*\(zeroable\)"#.into(),
+        });
+        testcases.push(TestCase {
             code: "
                 union Hello{}
             "
             .to_string(),
             has_errors: true,
             expected: r#"cannot implement Zeroable"#.into(),
-        },
-        TestCase {
+        });
+        testcases.push(TestCase {
             code: "
                 #[repr(transparent)]
                 union Hello{
@@ -77,17 +121,63 @@ fn test_compilation() {
             .to_string(),
             has_errors: false,
             expected: r#"impl.*Zeroable.*for.*Hello"#.into(),
-        },
-        TestCase {
+        });
+        testcases.push(TestCase {
             code: "
                 struct Hello{}
             "
             .to_string(),
             has_errors: false,
             expected: r#"impl.*Zeroable.*for.*Hello"#.into(),
-        },
-    ];
+        });
+        testcases.push(TestCase {
+            code: "
+                #[zero(nonzero_fields)]
+                pub struct Struct {
+                    pub left: (),
+                    pub right: (),
+                }
+            "
+            .to_string(),
+            has_errors: true,
+            expected: r#"Cannot.*use.*attribute.*struct"#.into(),
+        });
+        testcases.push(TestCase {
+            code: "
+                #[zero(nonzero_fields)]
+                pub enum Enum {
+                    L,
+                }
+            "
+            .to_string(),
+            has_errors: true,
+            expected: r#"Cannot.*use.*attribute.*enum"#.into(),
+        });
 
+        testcases.push(TestCase {
+            code: struct_with_attr("", "#[zero(nonzero)]"),
+            has_errors: true,
+            expected: r#"Cannot.*use.*\(nonzero\).*attribute.*struct"#.into(),
+        });
+        testcases.push(TestCase {
+            code: struct_with_attr("", "#[zero(zeroable)]"),
+            has_errors: true,
+            expected: r#"Cannot.*use.*\(zeroable\).*attribute.*struct"#.into(),
+        });
+
+        testcases.push(TestCase {
+            code: enum_with_attr("", "#[zero(nonzero)]"),
+            has_errors: true,
+            expected: r#"Cannot.*use.*\(nonzero\).*attribute.*enum"#.into(),
+        });
+        testcases.push(TestCase {
+            code: enum_with_attr("", "#[zero(zeroable)]"),
+            has_errors: true,
+            expected: r#"Cannot.*use.*\(zeroable\).*attribute.*enum"#.into(),
+        });
+
+        testcases
+    };
     let mut errors = Vec::new();
 
     for example in testcases.iter() {

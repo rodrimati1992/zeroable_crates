@@ -205,7 +205,7 @@ fn parse_sabi_attr<'a>(
                             .generics
                             .type_params()
                             .position(|x| x.ident == *tyident)
-                            .ok_or_else(|| spanned_err! {tyident,"Not a type parameter"})?;
+                            .ok_or_else(|| spanned_err! {tyident,"Expected a type parameter"})?;
 
                         this.unbounded_typarams[pos] = IsBounded::No;
 

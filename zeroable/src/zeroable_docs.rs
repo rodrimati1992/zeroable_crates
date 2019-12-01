@@ -58,7 +58,7 @@ These are all the attributes for the derive macro,grouped by where they can be u
 
 ##### `#[zero(bound="Type:ATrait")]`
 
-Adds a bound to the `Zeroable` impl.
+Adds a contraint to the `Zeroable` impl.
 
 ##### `#[zero(not_zeroable(TypeParamA,TypeParamB,TypeParamC))]`
 
@@ -69,6 +69,7 @@ Removes the default `Zeroable` bound for one/many type parameters.
 For unions only.
 
 Marks all the fields as not being zeroable,
+removing the assertion that they implement Zeroable,
 requiring some fields to have a `#[zero(zeroable)]` attribute.
 
 ##### `#[zero(debug_print)]`
@@ -81,7 +82,8 @@ Prints the generated code,stopping compilation.
 
 For unions only.
 
-Marks the field as being initializable with zeroes.
+Marks the field as being initializable with zeroes,
+adding an assertion that it implements Zeroable.
 
 The field is then mentioned in the generated documentation for
 the Zeroable impl under `Zeroable Fields`.
@@ -90,7 +92,8 @@ the Zeroable impl under `Zeroable Fields`.
 
 For unions only.
 
-Marks the field as not being initializable with zeroes.
+Marks the field as not being initializable with zeroes,
+removing the assertion that it implements Zeroable.
 
 The field is then mentioned in the generated documentation for
 the Zeroable impl under `NonZero Fields`.

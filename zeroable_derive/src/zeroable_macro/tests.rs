@@ -22,10 +22,10 @@ fn test_compilation() {
         format!(
             "
             {}
-            pub struct Struct {{
+            pub struct Struct<T,U,const V:()> {{
                 {}
-                pub left: (),
-                pub right: (),
+                pub left: T,
+                pub right: U,
             }}
         ",
             struct_attr, field_attr,
@@ -130,6 +130,29 @@ fn test_compilation() {
             has_errors: false,
             expected: r#"impl.*Zeroable.*for.*Hello"#.into(),
         });
+        testcases.push(TestCase {
+            code: "
+                #[zero(bound=\" A:Foo \")]
+                struct Hello{}
+            "
+            .to_string(),
+            has_errors: false,
+            expected: r#"A *: *Foo"#.into(),
+        });
+
+        testcases.push(TestCase {
+            code: struct_with_attr("#[zero(not_zeroable(A))]", ""),
+            has_errors: true,
+            expected: r#"Expected.*type.*parameter"#.into(),
+        });
+
+        // Testing that const parameters are not treated as type parameters
+        testcases.push(TestCase {
+            code: struct_with_attr("#[zero(not_zeroable(V))]", ""),
+            has_errors: true,
+            expected: r#"Expected.*type.*parameter"#.into(),
+        });
+
         testcases.push(TestCase {
             code: "
                 #[zero(nonzero_fields)]

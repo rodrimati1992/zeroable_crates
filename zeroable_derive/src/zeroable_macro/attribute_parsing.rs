@@ -1,12 +1,14 @@
 use crate::{
     attribute_parsing_shared::with_nested_meta,
-    datastructure::{DataStructure, MyField, Struct},
+    datastructure::{DataStructure, DataVariant, MyField, Struct},
     repr_attr::ReprAttr,
 };
 
 use proc_macro2::TokenStream as TokenStream2;
 
 use syn::{Attribute, Lit, Meta, MetaList, MetaNameValue, WherePredicate};
+
+use quote::ToTokens;
 
 use std::marker::PhantomData;
 
@@ -25,7 +27,7 @@ pub(crate) struct ZeroConfig<'a> {
     /// If true,panics with the output of the derive macro.
     pub(crate) debug_print: bool,
 
-    pub(crate) zeroable_field: Option<usize>,
+    pub(crate) zeroable_fields: Vec<IsZeroable>,
 
     pub(crate) repr_attr: ReprAttr,
 
@@ -39,7 +41,7 @@ impl<'a> ZeroConfig<'a> {
             unbounded_typarams,
             test_code,
             debug_print,
-            zeroable_field,
+            zeroable_fields,
             repr_attr,
             _marker,
         } = za;
@@ -49,7 +51,7 @@ impl<'a> ZeroConfig<'a> {
             unbounded_typarams,
             test_code,
             debug_print,
-            zeroable_field,
+            zeroable_fields,
             repr_attr,
             _marker,
         })
@@ -64,6 +66,21 @@ pub(crate) enum IsBounded {
     No,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub(crate) enum IsZeroable {
+    Yes,
+    No,
+}
+
+impl IsZeroable {
+    pub(crate) fn new(val: bool) -> Self {
+        match val {
+            true => IsZeroable::Yes,
+            false => IsZeroable::No,
+        }
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 struct ZeroableAttrs<'a> {
@@ -71,7 +88,7 @@ struct ZeroableAttrs<'a> {
     unbounded_typarams: Vec<IsBounded>,
     test_code: Vec<TokenStream2>,
     debug_print: bool,
-    zeroable_field: Option<usize>,
+    zeroable_fields: Vec<IsZeroable>,
     repr_attr: ReprAttr,
     _marker: PhantomData<&'a ()>,
 }
@@ -94,7 +111,11 @@ pub(crate) fn parse_attrs_for_zeroed<'a>(
         unbounded_typarams: vec![IsBounded::Yes; typaram_count],
         test_code: Vec::new(),
         debug_print: false,
-        zeroable_field: None,
+        zeroable_fields: if ds.data_variant == DataVariant::Union {
+            vec![IsZeroable::Yes; ds.variants[0].fields.len()]
+        } else {
+            Vec::new()
+        },
         repr_attr: ReprAttr::Rust,
         _marker: PhantomData,
     };
@@ -196,13 +217,29 @@ fn parse_sabi_attr<'a>(
         (ParseContext::TypeAttr { .. }, Meta::Path(path)) => {
             if path.is_ident("debug_print") {
                 this.debug_print = true;
+            } else if path.is_ident("nonzero_fields") {
+                for zf in &mut this.zeroable_fields {
+                    *zf = IsZeroable::No;
+                }
             } else {
                 return_spanned_err! {path,"Unrecognized attribute"}
             }
         }
         (ParseContext::Field { field }, Meta::Path(path)) => {
-            if path.is_ident("zeroable") {
-                this.zeroable_field = Some(field.index.pos);
+            let is_zeroable;
+
+            if {
+                is_zeroable = path.is_ident("zeroable");
+                is_zeroable || path.is_ident("nonzero")
+            } {
+                match this.zeroable_fields.get_mut(field.index.pos) {
+                    Some(zf) => *zf = IsZeroable::new(is_zeroable),
+                    None => return_spanned_err! {
+                        path,
+                        "Cannot use the `#[zero({})]` attribute on a struct/union field ",
+                        path.to_token_stream(),
+                    },
+                }
             } else {
                 return_spanned_err! {path,"Unrecognized attribute"}
             }

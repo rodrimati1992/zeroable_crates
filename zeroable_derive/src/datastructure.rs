@@ -92,6 +92,13 @@ impl<'a> DataStructure<'a> {
             variants,
         }
     }
+
+    pub fn is_public(&self) -> bool {
+        match self.vis {
+            Visibility::Public { .. } => true,
+            _ => false,
+        }
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -234,6 +241,18 @@ impl<'a> MyField<'a> {
         match &self.ident {
             FieldIdent::Index(_, ident) => ident,
             FieldIdent::Named(ident) => ident,
+        }
+    }
+
+    pub fn ty_span(&self) -> Span {
+        use syn::spanned::Spanned;
+        self.ty.span()
+    }
+
+    pub fn is_public(&self) -> bool {
+        match self.vis {
+            Visibility::Public { .. } => true,
+            _ => false,
         }
     }
 }

@@ -6,18 +6,16 @@ use crate::{
 
 use proc_macro2::TokenStream as TokenStream2;
 
-use quote::quote;
+use quote::{quote, quote_spanned};
 
 use syn::{punctuated::Punctuated, DeriveInput};
-
-use std::iter;
 
 mod attribute_parsing;
 
 #[cfg(test)]
 mod tests;
 
-use self::attribute_parsing::{IsBounded, ZeroConfig};
+use self::attribute_parsing::{IsBounded, IsZeroable, ZeroConfig};
 
 pub fn derive(ref data: DeriveInput) -> Result<TokenStream2, syn::Error> {
     let ds = &DataStructure::new(data);
@@ -28,6 +26,13 @@ pub fn derive(ref data: DeriveInput) -> Result<TokenStream2, syn::Error> {
         DataVariant::Struct => emit_field_assertions(&ds.variants[0].fields),
         DataVariant::Enum => checks_and_emit_enum_field_assertions(ds, config)?,
         DataVariant::Union => checks_and_emit_union_field_assertions(ds, config)?,
+    };
+
+    let zeroable_docs = match ds.data_variant {
+        _ if !ds.is_public() => String::new(),
+        DataVariant::Struct => String::new(),
+        DataVariant::Enum => String::new(),
+        DataVariant::Union => docs_for_union(ds, config),
     };
 
     let name = ds.name;
@@ -60,6 +65,7 @@ pub fn derive(ref data: DeriveInput) -> Result<TokenStream2, syn::Error> {
     let test_code = &*config.test_code;
 
     let tokens = quote!(
+        #[doc(hidden)]
         impl #impl_generics #name #ty_generics
         #where_clause_tokens
         {
@@ -69,6 +75,7 @@ pub fn derive(ref data: DeriveInput) -> Result<TokenStream2, syn::Error> {
             };
         }
 
+        #[doc=#zeroable_docs]
         unsafe impl #impl_generics ::zeroable::Zeroable for #name #ty_generics
         #where_clause_tokens
         {}
@@ -130,7 +137,7 @@ fn checks_and_emit_union_field_assertions(
     const UNION_ATTR_ERR: &str = "\
 Expected either:
 
-- A field with a `#[zero(zeroable)]` attribute.
+- One or more zeroable fields.
 
 - A `#[repr(transparent)]` attribute.
     ";
@@ -138,19 +145,28 @@ Expected either:
     let union_ = &ds.variants[0];
 
     if union_.fields.len() == 0 {
-        return_spanned_err! { ds.name,"Zero field union cannot implement Zeroable." }
+        return_spanned_err! { ds.name,"Zero fields union cannot implement Zeroable." }
     } else {
-        let zeroable_field = if config.repr_attr == ReprAttr::Transparent {
-            0
+        let zeroable_fields = if config.repr_attr == ReprAttr::Transparent {
+            vec![&union_.fields[0]]
         } else {
             config
-                .zeroable_field
-                .ok_or_else(|| spanned_err!(ds.name, "{}", UNION_ATTR_ERR))?
+                .zeroable_fields
+                .iter()
+                .cloned()
+                .zip(&union_.fields)
+                .filter_map(|(zeroableness, field)| match zeroableness {
+                    IsZeroable::No => None,
+                    IsZeroable::Yes => Some(field),
+                })
+                .collect::<Vec<_>>()
         };
 
-        let the_field = &union_.fields[zeroable_field];
+        if zeroable_fields.is_empty() {
+            return_spanned_err!(ds.name, "{}", UNION_ATTR_ERR)
+        }
 
-        Ok(emit_field_assertions(iter::once(the_field)))
+        Ok(emit_field_assertions(zeroable_fields))
     }
 }
 
@@ -158,10 +174,71 @@ fn emit_field_assertions<'a, I>(fields: I) -> TokenStream2
 where
     I: IntoIterator<Item = &'a MyField<'a>>,
 {
-    let tys = fields.into_iter().map(|x| x.ty);
-    quote!({
-        #(
-            let _=::zeroable::AssertZeroable::<#tys>::NEW;
-        )*
-    })
+    fields
+        .into_iter()
+        .map(|field| {
+            let ty = field.ty;
+            quote_spanned!(field.ty_span()=>
+                { let _=<#ty as ::zeroable::GetAssertZeroable>::GET; }
+            )
+        })
+        .collect()
+}
+
+fn docs_for_union(ds: &'_ DataStructure<'_>, config: &'_ ZeroConfig<'_>) -> String {
+    use quote::ToTokens;
+
+    use std::fmt::Write;
+
+    assert_eq!(ds.data_variant, DataVariant::Union);
+
+    let union_ = &ds.variants[0];
+
+    let mut buffer = String::with_capacity(256);
+
+    let mut zeroable_fields = Vec::new();
+    let mut nonzero_fields = Vec::new();
+
+    config
+        .zeroable_fields
+        .iter()
+        .zip(&union_.fields)
+        .filter(|(_, f)| f.is_public())
+        .for_each(|(zeroableness, field)| {
+            match *zeroableness {
+                IsZeroable::No => &mut nonzero_fields,
+                IsZeroable::Yes => &mut zeroable_fields,
+            }
+            .push(field)
+        });
+
+    fn output_fields(buffer: &mut String, fields: Vec<&MyField<'_>>) {
+        for field in fields {
+            let ty = field.ty.to_token_stream();
+            let _ = write!(buffer, "- `{}: {}` \n\n", field.ident(), ty);
+        }
+    };
+
+    if zeroable_fields.len() + nonzero_fields.len() < union_.fields.len() {
+        buffer.push_str("# Private Fields\n\n");
+        buffer.push_str("Private fields are omitted in this documentation.\n\n");
+    }
+
+    buffer.push_str("# Zeroable Fields\n\n");
+    buffer.push_str(
+        "These fields can be safely accessed in the return value of `Self::zeroed()`:\n\n",
+    );
+
+    output_fields(&mut buffer, zeroable_fields);
+
+    if !nonzero_fields.is_empty() {
+        buffer.push_str("# NonZero Fields\n\n");
+        buffer.push_str(
+            "These fields may be unsound to access in the return value of `Self::zeroed()`:\n\n",
+        );
+
+        output_fields(&mut buffer, nonzero_fields);
+    }
+
+    buffer
 }

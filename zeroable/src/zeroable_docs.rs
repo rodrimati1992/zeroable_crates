@@ -1,7 +1,9 @@
 /*!
 Documentation for the `Zeroable` derive macro.
 
-The `Zeroable` derive macro allows deriving the `bytemuck::Zeroable` trait.
+This macro is for deriving the
+[`bytemuck::Zeroable` trait](https://docs.rs/bytemuck/1/bytemuck/trait.Zeroable.html).
+
 
 # Restrictions
 
@@ -40,7 +42,7 @@ Enums must satisfy one of these:
 All fields are required to implement Zeroable by default,
 opting out of Zeroable for fields individually with `#[zero(nonzero)]`.
 
-The alternative to using the `#[zero(nonzero)]` attribute on fields is 
+The alternative to using the `#[zero(nonzero)]` attribute on fields is
 to use the `#[zero(nonzero_fields)]` attribute on the union
 (which makes not requiring zeroable for fields the default for that union),
 then using the `#[zero(zeroable)]` attribute on zeroable fields.
@@ -81,7 +83,7 @@ For unions only.
 
 Marks the field as being initializable with zeroes.
 
-The field is then mentioned in the generated documentation for 
+The field is then mentioned in the generated documentation for
 the Zeroable impl under `Zeroable Fields`.
 
 ##### `#[zero(nonzero)]`
@@ -90,7 +92,7 @@ For unions only.
 
 Marks the field as not being initializable with zeroes.
 
-The field is then mentioned in the generated documentation for 
+The field is then mentioned in the generated documentation for
 the Zeroable impl under `NonZero Fields`.
 
 # Examples
@@ -242,6 +244,51 @@ assert_eq!( Wrapper::<usize>::zeroed(), Wrapper::Value(0_usize) );
 assert_eq!( Wrapper::<(usize,usize)>::zeroed(), Wrapper::Value((0_usize,0_usize)) );
 ```
 
+### Enum (requires nightly) (non-compiling)
+
+This is an example that fixes a non-compiling enum by setting the discriminant
+of a variant to 0.
+
+*/
+#![cfg_attr(feature="nightly_docs",doc="```compile_fail")]
+#![cfg_attr(not(feature="nightly_docs"),doc="```ignore")]
+/*!
+use zeroable::Zeroable;
+
+use std::error::Error;
+
+#[derive(Debug,Zeroable)]
+#[repr(i8)]
+enum MyError{
+    PageNotFound{name:String},
+    Undefined,
+    Other(Box<dyn Error>)
+}
+```
+This fails to compile because String isn't zeroable,
+so let's change the variant with a zero discriminant to `Undefined`
+
+*/
+#![cfg_attr(feature="nightly_docs",doc="```rust")]
+#![cfg_attr(not(feature="nightly_docs"),doc="```ignore")]
+/*!
+#![feature(arbitrary_enum_discriminant)]
+
+use zeroable::Zeroable;
+
+use std::error::Error;
+
+#[derive(Debug,Zeroable)]
+#[repr(i8)]
+enum MyError{
+    PageNotFound{name:String}=-1,
+    Undefined=0,
+    Other(Box<dyn Error>),
+}
+```
+The first variant has to have an explicit discriminant,
+because otherwise it uses `0` as its discriminant,
+causing a compile time error.
 
 ### Struct
 

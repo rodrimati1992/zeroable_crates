@@ -12,7 +12,8 @@ Provides a derive macro for
 
 # Derive Documentation
 
-[Here is the documentation for `Zeroable`](https://docs.rs/zeroable/0.2/zeroable/zeroable_docs/index.html)
+[Here is the documentation for the `Zeroable` derive macro
+](https://docs.rs/zeroable/0.2/zeroable/zeroable_docs/index.html)
 
 # Examples
 

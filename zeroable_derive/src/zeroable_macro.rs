@@ -113,10 +113,12 @@ Expected either:
             if ds.variants[0].discriminant.map_or(true, ExprExt::is_zero) {
                 0
             } else {
-                ds.variants[1..]
+                let offset = 1;
+                ds.variants[offset..]
                     .iter()
                     .position(|var| var.discriminant.map_or(false, ExprExt::is_zero))
                     .ok_or_else(move || spanned_err! { ds.name,"{}",ENUM_DISCR_ERR })?
+                    + offset
             }
         }
         ReprAttr::Transparent => 0,

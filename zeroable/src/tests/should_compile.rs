@@ -64,14 +64,13 @@ fn stable_union_test() {
 
 #[test]
 fn between_union_fields() {
-    type TransmuteInt=UnionZeroableFieldC<u32,[u8;4]>;
+    type TransmuteInt = UnionZeroableFieldC<u32, [u8; 4]>;
 
     unsafe {
         assert_eq!(TransmuteInt::zeroed().a, 0);
         assert_eq!(TransmuteInt::zeroed().b, [0, 0, 0, 0]);
     }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

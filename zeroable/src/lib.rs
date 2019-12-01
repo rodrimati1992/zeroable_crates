@@ -1,9 +1,11 @@
 /*!
-A [bytemuck](https://docs.rs/bytemuck/1) adjacent library,with a derive macro for `Zeroable`.
+A [bytemuck](https://docs.rs/bytemuck/1) adjacent library,with a derive macro for 
+[`Zeroable`](https://docs.rs/bytemuck/1/bytemuck/trait.Zeroable.html).
 
 # Derive Documentation
 
-[Here is the documentation for `Zeroable`](./zeroable_docs/index.html)
+[Here is the documentation for the `Zeroable` derive macro
+](./zeroable_docs/index.html)
 
 # `#[no_std]` support
 
@@ -13,7 +15,7 @@ This crate is `#[no_std]`,and only requires the `core` library.
 
 */
 
-#![no_std]
+#![cfg_attr(not(feature="nightly_docs"),no_std)]
 #![cfg_attr(feature = "nightly_testing", feature(arbitrary_enum_discriminant))]
 #![cfg_attr(feature = "nightly_testing", feature(transparent_unions))]
 #![cfg_attr(feature = "nightly_testing", feature(transparent_enums))]

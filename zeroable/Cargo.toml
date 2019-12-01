@@ -31,7 +31,7 @@ testing=[]
 
 # This enables doctests that require nightly,
 # otherwise they are ignored by the test runner (they appear as ignored in the docs).
-nightly_docs=[]
+nightly_docs=["bytemuck/extern_crate_alloc"]
 
 [dependencies]
 bytemuck="1.0"

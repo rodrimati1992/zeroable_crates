@@ -1,3 +1,5 @@
+//! Contains both a trait and a type to contrain some type with `Zeroable`.
+
 use crate::Zeroable;
 
 use bytemuck::Pod;
@@ -91,3 +93,15 @@ impl<T: ?Sized> Debug for AssertZeroable<T> {
         ds.finish()
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+/// Constructs an `AssertZeroable<Self>`.
+/// Declared to improve the error message when a field does not implement `Zeroable`.
+pub trait GetAssertZeroable: Zeroable {
+    /// Gets an `AssertZeroable<Self>`,
+    /// a marker type representing that `T` is `Zeroable`
+    const GET: AssertZeroable<Self> = AssertZeroable::NEW;
+}
+
+impl<This: ?Sized + Zeroable> GetAssertZeroable for This {}

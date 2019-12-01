@@ -18,7 +18,7 @@ This crate is `#[no_std]`,and only requires the `core` library.
 #![cfg_attr(feature = "nightly_testing", feature(transparent_unions))]
 #![cfg_attr(feature = "nightly_testing", feature(transparent_enums))]
 
-mod assert_zeroable;
+pub mod assert_zeroable;
 
 pub mod zeroable_docs;
 
@@ -35,11 +35,12 @@ pub use bytemuck::Zeroable;
 
 pub use zeroable_derive::Zeroable;
 
-pub use crate::assert_zeroable::AssertZeroable;
+pub use crate::assert_zeroable::{AssertZeroable, GetAssertZeroable};
 
 #[cfg(all(test, not(feature = "testing")))]
 compile_error! { "tests must be run with the \"testing\" feature" }
 
 #[cfg(feature = "testing")]
 mod tests;
+
 

@@ -29,7 +29,7 @@ Enums must satisfy one of these:
     with either an implicit discriminant for the first variant (which is always `0`),
     or an explicit `0` discriminant for some variant.
     <br>
-    The fields of the variant with a `0` discriminant will then be required to 
+    The fields of the variant with a `0` discriminant will then be required to
     implement Zeroable,while the fields of other variants won't be.
 
 - Having a `#[repr(transparent)]` attribute,with a single variant and field,
@@ -37,12 +37,16 @@ Enums must satisfy one of these:
 
 ### Unions
 
-Unions must satisfy one of these:
+All fields are required to implement Zeroable by default,
+opting out of Zeroable for fields individually with `#[zero(nonzero)]`.
 
-- Having a `#[repr(transparent)]` attribute,with a single field,
-    which implements Zeroable.
+The alternative to using the `#[zero(nonzero)]` attribute on fields is 
+to use the `#[zero(nonzero_fields)]` attribute on the union
+(which makes not requiring zeroable for fields the default for that union),
+then using the `#[zero(zeroable)]` attribute on zeroable fields.
 
-- Having a field with a `#[zero(zeroable)]` attribute,which is of a Zeroable type.
+Zeroable impls for unions have documentation which mentions
+which fields were marked as zeroable,and which are not.
 
 # Attributes
 
@@ -58,6 +62,13 @@ Adds a bound to the `Zeroable` impl.
 
 Removes the default `Zeroable` bound for one/many type parameters.
 
+##### `#[zero(nonzero_fields)]`
+
+For unions only.
+
+Marks all the fields as not being zeroable,
+requiring some fields to have a `#[zero(zeroable)]` attribute.
+
 ##### `#[zero(debug_print)]`
 
 Prints the generated code,stopping compilation.
@@ -68,7 +79,19 @@ Prints the generated code,stopping compilation.
 
 For unions only.
 
-Determines which field of a union is expected to be initialized with zeroes.
+Marks the field as being initializable with zeroes.
+
+The field is then mentioned in the generated documentation for 
+the Zeroable impl under `Zeroable Fields`.
+
+##### `#[zero(nonzero)]`
+
+For unions only.
+
+Marks the field as not being initializable with zeroes.
+
+The field is then mentioned in the generated documentation for 
+the Zeroable impl under `NonZero Fields`.
 
 # Examples
 
@@ -102,7 +125,7 @@ A simple Option-like enum.
 In this the None variant is the one instantiated by `zeroed`.
 
 `#[zero(not_zeroable(T))]` doesn't cause an error because `T` is not in
-the variant instantiated by `zeroed` 
+the variant instantiated by `zeroed`
 (if `None` contained a `T`,then it would be an error).
 
 ```rust
@@ -293,7 +316,6 @@ use zeroable::Zeroable;
 #[derive(Zeroable)]
 #[repr(C)] // This isn't necessary for Zeroable
 union U32OrArray{
-    #[zero(zeroable)]
     num:u32,
     arr:[u8;4],
 }
@@ -314,6 +336,7 @@ use zeroable::Zeroable;
 
 #[derive(Zeroable)]
 #[zero(not_zeroable(T))]
+#[zero(nonzero_fields)]
 union CondValue<T:Copy>{
     #[zero(zeroable)]
     cond:bool,
@@ -359,7 +382,7 @@ unsafe{
 
 ### Union (non-compiling)
 
-This doesn't compile because no field has a `#[zero(zeroable)]` attribute.
+This doesn't compile because `ManuallyDrop<T>` is not zeroable.
 
 ```compile_fail
 use zeroable::Zeroable;
@@ -367,12 +390,65 @@ use zeroable::Zeroable;
 use core::mem::ManuallyDrop;
 
 #[derive(Zeroable)]
+#[zero(not_zeroable(T))]
 union MaybeUninitialized<T:Copy>{
     uninit:(),
     init:ManuallyDrop<T>,
 }
-
 ```
+
+To fix it simply remove the default `Zeroable` bound on the field like this:
+```
+use zeroable::Zeroable;
+
+use core::mem::ManuallyDrop;
+
+#[derive(Zeroable)]
+#[zero(not_zeroable(T))]
+union MaybeUninitialized<T:Copy>{
+    uninit:(),
+    #[zero(nonzero)]
+    init:ManuallyDrop<T>,
+}
+```
+
+
+
+### Union (non-compiling)
+
+This doesn't compile because the union has a `#[zero(nonzero_fields)]` attribute,
+but no field has a `#[zero(zeroable)]` attribute.
+
+```compile_fail
+use zeroable::Zeroable;
+
+use core::mem::ManuallyDrop;
+
+#[derive(Zeroable)]
+#[zero(not_zeroable(T))]
+#[zero(nonzero_fields)]
+union UnsafeEither<T:Copy,U:Copy>{
+    left:T,
+    right:U,
+}
+```
+
+To fix this instance simply add a `#[zero(zeroable)]` attribute to a field like this:
+```
+use zeroable::Zeroable;
+
+use core::mem::ManuallyDrop;
+
+#[derive(Zeroable)]
+#[zero(not_zeroable(T))]
+#[zero(nonzero_fields)]
+union UnsafeEither<T:Copy,U:Copy>{
+    left:T,
+    #[zero(zeroable)]
+    right:U,
+}
+```
+
 
 
 */

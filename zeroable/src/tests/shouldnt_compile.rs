@@ -5,7 +5,7 @@
 
 ///
 /// ```compile_fail
-/// #![cfg_attr(feature = "nightly_testing", feature(transparent_unions))]
+/// #![feature(transparent_unions)]
 ///
 /// use zeroable::Zeroable;
 ///
@@ -14,12 +14,13 @@
 /// #[derive(Zeroable)]
 /// #[repr(transparent)]
 /// union UnionTransparent {
+///     #[zero(nonzero)]
 ///     a: NonZeroU8,
 /// }
 /// ```
 ///
 /// ```rust
-/// #![cfg_attr(feature = "nightly_testing", feature(transparent_unions))]
+/// #![feature(transparent_unions)]
 ///
 /// use zeroable::Zeroable;
 ///
@@ -39,7 +40,6 @@ pub struct UnionTransparentNonCompiling;
 /// #[derive(Zeroable)]
 /// union UnionTransparent {
 ///     a: u8,
-///     #[zero(zeroable)]
 ///     b: &'static str,
 /// }
 /// ```
@@ -49,8 +49,8 @@ pub struct UnionTransparentNonCompiling;
 ///
 /// #[derive(Zeroable)]
 /// union UnionTransparent {
-///     #[zero(zeroable)]
 ///     a: u8,
+///     #[zero(nonzero)]
 ///     b: &'static str,
 /// }
 /// ```
@@ -60,7 +60,7 @@ pub struct UnionNonCompiling;
 
 ///
 /// ```compile_fail
-/// #![cfg_attr(feature = "nightly_testing", feature(transparent_enums))]
+/// #![feature(transparent_enums)]
 ///
 /// use zeroable::Zeroable;
 ///
@@ -74,7 +74,7 @@ pub struct UnionNonCompiling;
 /// ```
 ///
 /// ```rust
-/// #![cfg_attr(feature = "nightly_testing", feature(transparent_enums))]
+/// #![feature(transparent_enums)]
 ///
 /// use zeroable::Zeroable;
 ///

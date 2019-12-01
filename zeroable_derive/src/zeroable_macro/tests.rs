@@ -50,13 +50,14 @@ fn test_compilation() {
         },
         TestCase {
             code: "
+                #[zero(nonzero_fields)]
                 union Hello{
                     a:u32,
                 }
             "
             .to_string(),
             has_errors: true,
-            expected: r#"A field.*`#\[zero\(zeroable"#.into(),
+            expected: r#"Expected.*zeroable field"#.into(),
         },
         TestCase {
             code: "

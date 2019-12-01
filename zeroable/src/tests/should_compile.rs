@@ -13,15 +13,16 @@ mod nightly;
 
 #[derive(Zeroable)]
 union UnionZeroableField {
-    #[zero(zeroable)]
     a: usize,
     // Only the `#[zero(zeroable)]` field has to be zeroable
     #[allow(dead_code)]
+    #[zero(nonzero)]
     b: NonZeroU8,
 }
 
 #[derive(Zeroable)]
 #[zero(not_zeroable(U))]
+#[zero(nonzero_fields)]
 union UnionZeroableFieldB<U: Copy> {
     #[zero(zeroable)]
     a: usize,
@@ -33,10 +34,10 @@ union UnionZeroableFieldB<U: Copy> {
 #[derive(Zeroable)]
 #[zero(not_zeroable(U))]
 union UnionZeroableFieldC<T: Copy, U: Copy> {
-    #[zero(zeroable)]
     a: T,
     // Only the `#[zero(zeroable)]` field has to be zeroable
     #[allow(dead_code)]
+    #[zero(nonzero)]
     b: U,
 }
 
@@ -60,6 +61,17 @@ fn stable_union_test() {
 
     generic_union_asserts::<u8, NonZeroU8>();
 }
+
+#[test]
+fn between_union_fields() {
+    type TransmuteInt=UnionZeroableFieldC<u32,[u8;4]>;
+
+    unsafe {
+        assert_eq!(TransmuteInt::zeroed().a, 0);
+        assert_eq!(TransmuteInt::zeroed().b, [0, 0, 0, 0]);
+    }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
